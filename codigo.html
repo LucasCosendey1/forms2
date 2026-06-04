@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0f0c0a;color:#fff;min-height:100vh}
+.scr{display:none;flex-direction:column;align-items:center}
+.scr.on{display:flex}
+
+/* ── WELCOME ── */
+#sw{min-height:100vh;justify-content:center;text-align:center;padding:2rem 1.4rem;background:radial-gradient(ellipse at top,#1e0f00,#0f0c0a 65%)}
+.logo{font-size:2.5rem;margin-bottom:.5rem}
+.badge{background:linear-gradient(135deg,#e8841a,#c45c00);color:#fff;border-radius:999px;padding:.3rem .9rem;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;display:inline-block;margin-bottom:.8rem}
+.hero{font-size:clamp(1.8rem,5.5vw,3rem);font-weight:900;line-height:1.1;margin-bottom:.7rem;background:linear-gradient(135deg,#f5a623,#e8641a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub{color:#9a8878;max-width:420px;line-height:1.7;margin-bottom:1.6rem;font-size:.94rem}
+.form-card{background:#1a1410;border:1px solid #2a2018;border-radius:20px;padding:1.3rem 1.4rem;width:100%;max-width:400px;text-align:left;margin-bottom:1.4rem}
+.form-card h3{font-size:.95rem;font-weight:700;color:#f5a623;margin-bottom:.9rem;text-align:center}
+.fg{margin-bottom:.8rem}
+.fg label{display:block;font-size:.72rem;color:#7a6858;margin-bottom:.28rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.fg input,.fg select{width:100%;background:#0f0c0a;border:1px solid #2a2018;border-radius:10px;padding:.65rem .85rem;color:#fff;font-size:.88rem;outline:none;transition:.2s;-webkit-appearance:none;appearance:none}
+.fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a6858'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .85rem center;padding-right:2rem}
+.fg input:focus,.fg select:focus{border-color:#e8841a;box-shadow:0 0 0 3px #e8841a22}
+.fg input::placeholder{color:#3a2a18}
+.btn{border:none;border-radius:999px;font-weight:700;cursor:pointer;transition:.2s;letter-spacing:.02em}
+.btn-p{background:linear-gradient(135deg,#e8841a,#c45c00);color:#fff;padding:.85rem 2.2rem;font-size:1rem}
+.btn-p:hover{transform:scale(1.04);box-shadow:0 0 26px #e8841a44}
+.btn-p:disabled{opacity:.4;transform:none;cursor:default;box-shadow:none}
+.btn-s{background:#221e17;color:#a09078;padding:.5rem 1rem;font-size:.8rem;border-radius:10px;border:none;cursor:pointer}
+.btn-s:hover{background:#2a2620}
+.admin-dot{font-size:.6rem;color:#2a2018;margin-top:1.5rem;cursor:pointer;letter-spacing:.25em;user-select:none}
+
+/* ── QUIZ ── */
+#sq{min-height:100vh;width:100%;max-width:560px;padding:1.2rem;margin:0 auto}
+.prow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.32rem}
+.plbl{font-size:.77rem;color:#6a5848}
+.ppct{font-size:.77rem;color:#e8841a;font-weight:700}
+.ptrack{height:4px;background:#1e1a16;border-radius:999px;overflow:hidden;margin-bottom:1.2rem}
+.pfill{height:100%;background:linear-gradient(90deg,#e8841a,#ffb347);border-radius:999px;transition:width .4s}
+
+.card{background:#1a1410;border-radius:20px;overflow:hidden;box-shadow:0 8px 36px #000a;width:100%}
+
+/* image area */
+.cimg{position:relative;height:240px;overflow:hidden;background:#14110e;touch-action:pan-y}
+.cfb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:4.5rem;z-index:1;transition:opacity .35s}
+.cimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;opacity:0;transition:opacity .5s ease}
+.cimg img.vis{opacity:1}
+.cgrad{position:absolute;bottom:0;left:0;right:0;height:100px;background:linear-gradient(transparent,#1a1410);z-index:4;pointer-events:none}
+.arr{position:absolute;top:50%;transform:translateY(-50%);z-index:6;background:rgba(0,0,0,.52);border:none;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:.2s;line-height:1}
+.arr:hover{background:rgba(0,0,0,.8);transform:translateY(-50%) scale(1.1)}
+#arrL{left:9px} #arrR{right:9px}
+.arr.off{display:none}
+.dots{position:absolute;bottom:11px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:5px}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);transition:.2s}
+.dot.on{background:#fff;width:16px;border-radius:3px}
+.dbtn{position:absolute;bottom:9px;right:9px;z-index:6;background:rgba(0,0,0,.58);border:1px solid rgba(255,255,255,.18);color:#fff;padding:.26rem .72rem;border-radius:999px;font-size:.7rem;font-weight:600;cursor:pointer;backdrop-filter:blur(4px);transition:.2s}
+.dbtn:hover{background:rgba(0,0,0,.8)}
+
+/* card body */
+.cbody{padding:.95rem 1.2rem 1.25rem}
+.chip{font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:.17rem .63rem;border-radius:999px;display:inline-block;margin-bottom:.4rem}
+.evn{font-size:1.18rem;font-weight:800;line-height:1.2;margin-bottom:.18rem}
+.evc{font-size:.82rem;color:#7a6858;margin-bottom:.9rem}
+.btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.52rem}
+.vb{border:none;border-radius:13px;padding:.7rem .3rem;font-size:.79rem;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.26rem;background:#221e17;color:#a09078;transition:.17s}
+.vb:hover{background:#2a2620;transform:translateY(-2px)}
+.vb .ic{font-size:1.28rem}
+.vb.yes{background:linear-gradient(135deg,#154d22,#27ae60);color:#fff;box-shadow:0 3px 14px #27ae6040}
+.vb.mby{background:linear-gradient(135deg,#4a3600,#f0a000);color:#fff;box-shadow:0 3px 14px #f0a00040}
+.vb.no{background:linear-gradient(135deg,#4a1616,#c0392b);color:#fff;box-shadow:0 3px 14px #c0392b40}
+.navr{display:flex;justify-content:space-between;align-items:center;margin-top:.7rem;width:100%}
+.bnav{background:#181410;border:none;color:#7a6858;padding:.52rem 1.05rem;border-radius:999px;font-size:.8rem;font-weight:600;cursor:pointer;transition:.17s}
+.bnav:hover:not(:disabled){background:#221e17}
+.bnav:disabled{opacity:.25;cursor:default}
+.ctr{font-size:.77rem;color:#6a5848}
+
+/* ── RESULT ── */
+#sr{min-height:100vh;justify-content:center;text-align:center;padding:2.5rem 1.4rem;background:radial-gradient(ellipse at top,#1e0f00,#0f0c0a 65%)}
+#sr h2{font-size:1.85rem;font-weight:900;margin-bottom:.3rem;background:linear-gradient(135deg,#f5a623,#e8641a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.pcard{background:#1a1410;border:1px solid #2a2218;border-radius:20px;padding:1.3rem 1.5rem;margin:1rem 0 1.2rem;max-width:380px;width:100%}
+.pem{font-size:2.5rem;margin-bottom:.35rem}
+.pnm{font-size:1.18rem;font-weight:800;color:#f5a623;margin-bottom:.23rem}
+.pds{font-size:.84rem;color:#907868;line-height:1.55}
+.rbars{width:100%;max-width:380px;display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.15rem}
+.rbr{display:flex;align-items:center;gap:.6rem}
+.rbl{width:80px;text-align:right;font-size:.8rem;color:#907868;flex-shrink:0}
+.rbt{flex:1;background:#1e1a16;border-radius:999px;height:9px;overflow:hidden}
+.rbf{height:100%;border-radius:999px;transition:width 1.1s cubic-bezier(.4,0,.2,1)}
+.rbn{width:24px;font-size:.77rem;color:#6a5848}
+.savmsg{font-size:.77rem;color:#6a5848;margin-bottom:1rem;min-height:1.1rem}
+
+/* ── ADMIN ── */
+#sa{min-height:100vh;width:100%;max-width:640px;padding:1.3rem;align-items:flex-start}
+#sa h2{font-size:1.4rem;font-weight:800;color:#f5a623;margin-bottom:1rem}
+.pwbox{background:#1a1410;border:1px solid #2a2018;border-radius:18px;padding:1.5rem;width:100%;max-width:370px;text-align:center;margin:0 auto}
+.pwbox h3{color:#f5a623;margin-bottom:.7rem;font-size:1rem}
+.pwbox p{font-size:.84rem;color:#7a6858}
+.pwrow{display:flex;gap:.6rem;margin-top:.75rem}
+.pwrow input{flex:1;background:#0f0c0a;border:1px solid #2a2018;border-radius:10px;padding:.62rem .85rem;color:#fff;font-size:.88rem;outline:none}
+.pwrow input:focus{border-color:#e8841a}
+.pwerr{color:#c0392b;font-size:.76rem;margin-top:.45rem}
+.totbox{background:#1a1410;border-radius:12px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.88rem;color:#a09078;width:100%}
+.totbox strong{color:#f5a623;font-size:1.05rem}
+.aacts{display:flex;gap:.7rem;margin-bottom:1.1rem;flex-wrap:wrap}
+.sbox{background:#1a1410;border-radius:13px;padding:.88rem 1rem;margin-bottom:.55rem;width:100%}
+.snm{font-size:.83rem;font-weight:700;margin-bottom:.3rem}
+.sct{color:#6a5848;font-weight:400;font-size:.77rem}
+.mbars{display:flex;height:7px;border-radius:999px;overflow:hidden;margin-bottom:.23rem;gap:1px}
+.mbar{height:100%;min-width:0}
+.snums{display:flex;gap:.7rem;font-size:.71rem;color:#6a5848}
+
+/* ── MODAL ── */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(5px)}
+.modal.off{display:none}
+.mcard{background:#1a1410;border:1px solid #2a2218;border-radius:20px;padding:1.5rem;max-width:460px;width:100%;max-height:78vh;overflow-y:auto;position:relative;animation:popIn .23s ease}
+.mclose{position:absolute;top:.8rem;right:.8rem;background:#2a2218;border:none;color:#a09078;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.88rem;display:flex;align-items:center;justify-content:center}
+.mclose:hover{background:#3a3228;color:#fff}
+.mtag{font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:.17rem .63rem;border-radius:999px;display:inline-block;margin-bottom:.55rem}
+.mtitle{font-size:1.18rem;font-weight:800;margin-bottom:.14rem}
+.mcity{font-size:.82rem;color:#7a6858;margin-bottom:.85rem}
+.mdesc{font-size:.9rem;line-height:1.78;color:#c0b0a0}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.fu{animation:fadeUp .32s ease}
+.spin{width:28px;height:28px;border:3px solid #2a2018;border-top-color:#e8841a;border-radius:50%;animation:spn .8s linear infinite;margin:1.5rem auto}
+@keyframes spn{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- WELCOME -->
+<div id="sw" class="scr on fu">
+  <div class="logo">🌵</div>
+  <span class="badge">Paraíba Escondida</span>
+  <h1 class="hero">Você toparia ir a estes destinos da Paraíba?</h1>
+  <p class="sub">20 eventos e festivais pouco conhecidos — mas que merecem muito a visita. Vote em cada um e descubra seu perfil!</p>
+  <div class="form-card">
+    <h3>✍️ Antes de começar, se apresente!</h3>
+    <div class="fg"><label>Seu nome</label><input id="fn" type="text" placeholder="Como você se chama?"/></div>
+    <div class="fg"><label>Sua idade</label><input id="fa" type="number" min="1" max="120" placeholder="Ex: 28"/></div>
+    <div class="fg"><label>Estado onde mora</label><select id="fs"><option value="">Selecione seu estado</option></select></div>
+  </div>
+  <button class="btn btn-p" id="bstart" onclick="startQuiz()" disabled>Começar agora →</button>
+  <div class="admin-dot" onclick="gotoAdmin()">• • •</div>
+</div>
+
+<!-- QUIZ -->
+<div id="sq" class="scr">
+  <div style="width:100%">
+    <div class="prow"><span class="plbl" id="plbl">Evento 1 de 20</span><span class="ppct" id="ppct">5%</span></div>
+    <div class="ptrack"><div class="pfill" id="pfill" style="width:5%"></div></div>
+  </div>
+  <div class="card fu" id="mainCard" style="width:100%">
+    <div class="cimg" id="cimg">
+      <div class="cfb" id="cfb"></div>
+      <button class="arr off" id="arrL" onclick="prevImg()">‹</button>
+      <button class="arr off" id="arrR" onclick="nextImg()">›</button>
+      <div class="dots" id="idots"></div>
+      <button class="dbtn" onclick="openDesc()">ℹ️ Descrição</button>
+      <div class="cgrad"></div>
+    </div>
+    <div class="cbody">
+      <span class="chip" id="cchip"></span>
+      <div class="evn" id="cname"></div>
+      <div class="evc" id="ccity"></div>
+      <div class="btns">
+        <button class="vb" id="vY" onclick="vote('yes')"><span class="ic">✅</span>Iria!</button>
+        <button class="vb" id="vM" onclick="vote('maybe')"><span class="ic">🤔</span>Talvez</button>
+        <button class="vb" id="vN" onclick="vote('no')"><span class="ic">❌</span>Não iria</button>
+      </div>
+    </div>
+  </div>
+  <div class="navr">
+    <button class="bnav" id="bPrev" onclick="prevEv()" disabled>← Anterior</button>
+    <span class="ctr" id="ctr">1/20</span>
+    <button class="bnav" id="bNext" onclick="nextEv()">Próximo →</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="sr" class="scr">
+  <h2>Seu resultado 🎉</h2>
+  <div class="pcard"><div class="pem" id="pem"></div><div class="pnm" id="pnm"></div><div class="pds" id="pds"></div></div>
+  <div class="rbars" id="rbars"></div>
+  <div class="savmsg" id="savmsg"></div>
+  <button class="btn btn-p" onclick="restart()">🔄 Refazer</button>
+</div>
+
+<!-- ADMIN -->
+<div id="sa" class="scr">
+  <h2>📊 Painel do Administrador</h2>
+  <div id="apw" class="pwbox">
+    <h3>🔒 Acesso restrito</h3>
+    <p>Digite a senha para entrar</p>
+    <div class="pwrow">
+      <input id="pwin" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter')checkPw()"/>
+      <button class="btn btn-s" onclick="checkPw()">Entrar</button>
+    </div>
+    <div class="pwerr" id="pwerr"></div>
+  </div>
+  <div id="acnt" style="display:none;width:100%">
+    <div class="aacts">
+      <button class="btn btn-s" onclick="loadAdmin()" style="background:#1a3020;color:#27ae60">🔄 Atualizar</button>
+      <button class="btn btn-s" onclick="downloadXLSX()" style="background:#1a2030;color:#4488cc">📥 Baixar XLSX</button>
+    </div>
+    <div class="totbox" id="atot"><div class="spin"></div></div>
+    <div id="astats"></div>
+  </div>
+  <button class="btn btn-s" style="margin-top:1.2rem" onclick="show('sw')">← Voltar</button>
+</div>
+
+<!-- MODAL DESCRIÇÃO -->
+<div id="mdesc" class="modal off" onclick="closeDescOutside(event)">
+  <div class="mcard">
+    <button class="mclose" onclick="closeDesc()">✕</button>
+    <span class="mtag" id="mtag"></span>
+    <div class="mtitle" id="mtitle"></div>
+    <div class="mcity" id="mcity"></div>
+    <div class="mdesc" id="mdtxt"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIG — cole aqui a URL do seu Apps Script após o deploy
+// ═══════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuUQVorXHhu4neHTGiOlCmRtFdS_fnYsSmd46VLEcYfkGt6MoxVFE0IL4lwY8d5TIv/exec';
+
+// ═══════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════
+const EVT=[
+  {n:"São João de Patos",          c:"Patos",                    t:"Festa Junina",       e:"🎪",bg:"#7a1a00,#c45c00",tC:"#e8841a",tB:"#3d1c00"},
+  {n:"Festa do Bode Rei",          c:"Cabaceiras",               t:"Cultura Sertaneja",  e:"🐐",bg:"#3d2800,#8b5e00",tC:"#c4a000",tB:"#2e1e00"},
+  {n:"Festa da Luz",               c:"Guarabira",                t:"Festival",           e:"✨",bg:"#1a003d,#5c0099",tC:"#9960ff",tB:"#140030"},
+  {n:"Caminhos do Frio",           c:"Brejo Paraibano",         t:"Rota Cultural",      e:"🌿",bg:"#002917,#1a7a4a",tC:"#27ae60",tB:"#002917"},
+  {n:"Festival de Inverno de Bananeiras",c:"Bananeiras",         t:"Festival de Inverno",e:"🍌",bg:"#001729,#1a4a7a",tC:"#4488cc",tB:"#001729"},
+  {n:"Festa do Caju",              c:"Matinhas",                t:"Festa Regional",     e:"🌰",bg:"#3d1800,#c4500a",tC:"#e87020",tB:"#3d1800"},
+  {n:"Festival Multicultural Engenhos da Paraíba",c:"Areia",    t:"Cultura & Arte",     e:"🎭",bg:"#291e00,#7a5a00",tC:"#c4a000",tB:"#291e00"},
+  {n:"Romaria da Penha",           c:"João Pessoa",             t:"Religioso",          e:"⛪",bg:"#001133,#1a4a99",tC:"#4488dd",tB:"#001133"},
+  {n:"Festa de Nossa Senhora da Guia",c:"Lucena",               t:"Religioso",          e:"🕊️",bg:"#292000,#7a6000",tC:"#c4a000",tB:"#292000"},
+  {n:"Festa de Nossa Senhora dos Remédios",c:"Sousa",            t:"Religioso",          e:"🌸",bg:"#290014,#7a1a40",tC:"#dd44aa",tB:"#290014"},
+  {n:"Festa do Rosário",           c:"Pombal",                  t:"Religioso",          e:"📿",bg:"#160029,#4a1a7a",tC:"#9955dd",tB:"#160029"},
+  {n:"Festa de São Sebastião",     c:"Alagoa Grande",           t:"Religioso",          e:"🎆",bg:"#002018,#1a6040",tC:"#27aa60",tB:"#002018"},
+  {n:"Festa de Reis",              c:"Boqueirão",               t:"Tradição Popular",   e:"👑",bg:"#29200a,#8b7000",tC:"#c4a000",tB:"#29200a"},
+  {n:"Cavalgada de N. Sra. da Conceição",c:"Taperoá",           t:"Cavalgada",          e:"🐎",bg:"#291300,#7a3a00",tC:"#e87020",tB:"#291300"},
+  {n:"Encontro de Violeiros do Vale do Pajeú e Cariri",c:"Teixeira",t:"Música",        e:"🎸",bg:"#290e00,#7a2a00",tC:"#e85020",tB:"#290e00"},
+  {n:"Festival de Voo Livre",      c:"Maturéia – Pico do Jabre",t:"Esporte & Aventura", e:"🪂",bg:"#001c33,#005a99",tC:"#4499ee",tB:"#001c33"},
+  {n:"Festival do Frio da Serra de Araruna",c:"Araruna",         t:"Festival de Inverno",e:"❄️",bg:"#001e29,#1a5a7a",tC:"#44aacc",tB:"#001e29"},
+  {n:"Festa do Produtor Rural",    c:"Boqueirão",               t:"Agropecuária",       e:"🌾",bg:"#0e2900,#2a7a00",tC:"#44aa22",tB:"#0e2900"},
+  {n:"Festa da Padroeira Sant'Ana",c:"Santana dos Garrotes",    t:"Religioso",          e:"🌺",bg:"#290016,#7a0040",tC:"#dd44aa",tB:"#290016"},
+  {n:"Emancipação de Cabaceiras & Bode Rei",c:"Cabaceiras",     t:"Emancipação",        e:"🎉",bg:"#2e1600,#8b4500",tC:"#e87020",tB:"#2e1600"},
+];
+
+// Fotos locais — mesma pasta do HTML
+const IMGS=[
+  ["Sao-Joao-Patos.jpg","Sao-Joao-Patos2.jpg"],
+  ["Bode Rei.jpg","Bode Rei2.jpg","Bode Rei3.jpg"],
+  ["festa da luz.jpg","festa da luz2.jpg"],
+  ["Caminhos do frio.jpg","Caminhos do frio2.jpg"],
+  ["Bananeiras.jpeg"],
+  ["Festa do caju.jpg","Festa do caju2.jpg","Festa do caju3.jpg"],
+  ["Engenhos PB.jpg"],
+  ["Romaria da Penha.jpg"],
+  ["N. Sra. da Guia.jpg"],
+  ["N. Sra. Remédios.jpg"],
+  ["Festa do Rosário.jpg"],
+  ["São Sebastião.jpg"],
+  ["Festa de Reis.jpg"],
+  ["Cavalgada.jpg"],
+  ["Violeiros.jpg"],
+  ["Voo livre.jpg","Voo livre2.jpg"],
+  ["Araruna.jpg"],
+  ["Produtor Rural.jpg"],
+  ["Sant'Ana.jpg"],
+  ["Emancipação.jpg"],
+];
+
+const DESCS=[
+  "Patos, terceira maior cidade da Paraíba, realiza um dos São Joões mais animados do sertão. A festa reúne forró pé-de-serra, quadrilhas, barracas típicas e shows de artistas regionais, sendo um dos maiores eventos do interior do estado durante o mês de junho.",
+  "Realizada no Cariri paraibano, a festa celebra a caprinovinocultura local. O ponto alto é a coroação do Bode Rei, onde o bode mais bonito recebe simbolicamente a chave da cidade. A 'Roliúde Nordestina' atrai mais de 60 mil visitantes por edição, com shows de violeiros e gastronomia à base de bode.",
+  "Festival que transforma Guarabira em espetáculo de luzes e música. Uma das atrações mais esperadas do interior paraibano no segundo semestre, reúne shows artísticos, iluminação especial e programação cultural que atrai turistas de toda a região do Brejo e Agreste.",
+  "Rota cultural realizada entre julho e setembro no Brejo Paraibano, onde as temperaturas chegam a 12°C. Percorre municípios como Areia, Bananeiras e Alagoa Grande com shows de MPB, forró pé-de-serra, gastronomia local e passeios pelos engenhos históricos do século XIX.",
+  "Bananeiras, no coração do Brejo, é palco de um festival cultural tradicional do Nordeste. Com shows de MPB e forró, oficinas culturais, apresentações teatrais e o famoso frio da Serra da Borborema, o festival atrai visitantes de todo o Brasil.",
+  "Matinhas celebra a colheita do caju com gastronomia, artesanato e apresentações culturais. Um encontro genuíno entre o produtor rural e o visitante, com degustação de cajuína, doces, mel de caju e licores, em meio à paisagem exuberante do Brejo paraibano.",
+  "Realizado em Areia, o festival acontece nos engenhos históricos do século XIX da região. Reúne música, gastronomia premiada, artes visuais e teatro em cenários únicos de casarões coloniais e canaviais, celebrando a riqueza multicultural do agreste paraibano.",
+  "Uma das maiores manifestações de fé da Paraíba. Realizada em João Pessoa com mais de 260 edições, reúne centenas de milhares de peregrinos que caminham até o Santuário de Nossa Senhora da Penha. Uma das romarias mais antigas e expressivas do Nordeste.",
+  "Romaria realizada em Lucena, no litoral norte da Paraíba. Devotos chegam de barco, a cavalo e a pé para honrar Nossa Senhora da Guia, padroeira dos pescadores — uma celebração singular que une fé, mar e tradição nas praias de Lucena.",
+  "Sousa, conhecida pelo sítio de dinossauros, paralisa para a festa da padroeira. Missas solenes, procissões e novenas se alternam com shows culturais e feiras de artesanato, mobilizando toda a comunidade e fiéis de toda a região do Alto Piranhas.",
+  "Tradição centenária de Pombal que homenageia Nossa Senhora do Rosário com procissões, congadas, reisados e missas solenes. Uma das festas religiosas mais antigas do estado, preservando rituais do período colonial e celebrando a cultura afro-brasileira do sertão.",
+  "Alagoa Grande, terra natal de Jackson do Pandeiro, celebra seu padroeiro com programação religiosa e cultural. Missas, procissões e shows de forró se misturam numa festa que mantém viva a identidade musical de uma das cidades mais importantes para a música popular brasileira.",
+  "Boqueirão celebra o Dia de Reis com folias, reisados e apresentações culturais típicas. Uma festa de raízes profundas que preserva tradições nordestinas em processo de extinção em outras regiões, reunindo comunidades rurais e urbanas em torno da chegada dos Reis Magos.",
+  "Taperoá — terra do escritor Ariano Suassuna — realiza sua cavalgada em honra a Nossa Senhora da Conceição. Cavaleiros de toda a região se reúnem numa procissão equestre que cruza a cidade, combinando fé, tradição sertaneja e espírito genuíno de comunidade.",
+  "Teixeira reúne violeiros, repentistas e cantadores de todo o Nordeste num festival dedicado à mais genuína expressão da cultura sertaneja: a viola e o repente. Cantorias improvisadas, desafios poéticos e literatura de cordel transformam a cidade num grande palco da memória do sertão.",
+  "O Pico do Jabre, em Maturéia, é o ponto mais alto da Paraíba (1.197 m). Capital Paraibana do Voo Livre, a cidade realiza anualmente seu festival de parapente e asa-delta. O céu fica colorido de asas e o espetáculo é gratuito para o público, com vista panorâmica do Sertão.",
+  "Araruna, no Curimataú paraibano, possui um dos climas mais frios do estado. O festival celebra esse microclima privilegiado com shows, gastronomia serrana, artesanato local e atividades culturais, revelando um destino ainda pouco explorado que encanta pela autenticidade.",
+  "Boqueirão homenageia o trabalhador rural do Cariri paraibano. A festa reúne exposição de animais, produtos agrícolas, maquinários e shows artísticos, valorizando o produtor rural e fortalecendo o agronegócio da região do Médio Paraíba.",
+  "Santana dos Garrotes celebra sua padroeira com procissões, missas e shows gratuitos. Uma das festas mais queridas do Vale do Piancó, reunindo a comunidade local e visitantes de municípios vizinhos em dias que fortalecem os laços comunitários e preservam a tradição religiosa.",
+  "A emancipação política de Cabaceiras é comemorada com programação especial que une orgulho cívico e a celebração do Bode Rei. Shows, exposições de artesanato e gastronomia típica homenageiam a história e a identidade única da 'Roliúde Nordestina', capital brasileira do couro.",
+];
+
+const STATES=["AC – Acre","AL – Alagoas","AP – Amapá","AM – Amazonas","BA – Bahia","CE – Ceará","DF – Distrito Federal","ES – Espírito Santo","GO – Goiás","MA – Maranhão","MT – Mato Grosso","MS – Mato Grosso do Sul","MG – Minas Gerais","PA – Pará","PB – Paraíba","PR – Paraná","PE – Pernambuco","PI – Piauí","RJ – Rio de Janeiro","RN – Rio Grande do Norte","RS – Rio Grande do Sul","RO – Rondônia","RR – Roraima","SC – Santa Catarina","SP – São Paulo","SE – Sergipe","TO – Tocantins"];
+
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+let cur=0, votes={}, profile={}, imgData={}, imgCur={}, adminOk=false, adminResps=[];
+let txStart=0;
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+(()=>{
+  const sel=document.getElementById('fs');
+  STATES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+  ['fn','fa','fs'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',chkForm);
+    document.getElementById(id).addEventListener('change',chkForm);
+  });
+  // Touch swipe on image
+  const ci=document.getElementById('cimg');
+  ci.addEventListener('touchstart',e=>{txStart=e.touches[0].clientX;},{passive:true});
+  ci.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-txStart;
+    if(dx<-45) nextImg(); else if(dx>45) prevImg();
+  },{passive:true});
+})();
+
+function chkForm(){
+  document.getElementById('bstart').disabled=
+    !(document.getElementById('fn').value.trim()&&document.getElementById('fa').value&&document.getElementById('fs').value);
+}
+
+// ═══════════════════════════════════════════════════
+//  SCREENS
+// ═══════════════════════════════════════════════════
+function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');}
+
+// ═══════════════════════════════════════════════════
+//  IMAGE LOADING — fotos locais
+// ═══════════════════════════════════════════════════
+function loadAllImgs(){
+  IMGS.forEach((files,i)=>{ imgData[i]=files; });
+}
+
+// ═══════════════════════════════════════════════════
+//  QUIZ
+// ═══════════════════════════════════════════════════
+function startQuiz(){
+  profile={name:document.getElementById('fn').value.trim(),age:document.getElementById('fa').value,state:document.getElementById('fs').value};
+  show('sq'); loadAllImgs(); render();
+}
+
+function render(){
+  const e=EVT[cur];
+  const pct=Math.round((cur+1)/EVT.length*100);
+  document.getElementById('plbl').textContent=`Evento ${cur+1} de ${EVT.length}`;
+  document.getElementById('ppct').textContent=pct+'%';
+  document.getElementById('pfill').style.width=pct+'%';
+  document.getElementById('ctr').textContent=`${cur+1}/${EVT.length}`;
+  document.getElementById('bPrev').disabled=cur===0;
+  document.getElementById('bNext').textContent=cur===EVT.length-1?'Ver resultado →':'Próximo →';
+
+  const chip=document.getElementById('cchip');
+  chip.textContent=e.t; chip.style.color=e.tC; chip.style.background=e.tB;
+  document.getElementById('cname').textContent=e.n;
+  document.getElementById('ccity').innerHTML='📍 '+e.c;
+
+  const fb=document.getElementById('cfb');
+  fb.style.background=`linear-gradient(135deg,${e.bg})`;
+  fb.textContent=e.e; fb.style.opacity='1';
+
+  if(imgCur[cur]===undefined) imgCur[cur]=0;
+  document.getElementById('cimg').querySelectorAll('img').forEach(i=>i.remove());
+  refreshImg();
+
+  const v=votes[cur];
+  document.getElementById('vY').className='vb'+(v==='yes'?' yes':'');
+  document.getElementById('vM').className='vb'+(v==='maybe'?' mby':'');
+  document.getElementById('vN').className='vb'+(v==='no'?' no':'');
+
+  const c=document.getElementById('mainCard');
+  c.style.animation='none'; void c.offsetWidth; c.style.animation='fadeUp .32s ease';
+}
+
+function refreshImg(){
+  const imgs=imgData[cur]||[];
+  const idx=imgCur[cur]||0;
+  const wrap=document.getElementById('cimg');
+  const fb=document.getElementById('cfb');
+
+  // Fallback reset
+  fb.style.opacity='1';
+  wrap.querySelectorAll('img').forEach(i=>i.remove());
+
+  // Arrows
+  document.getElementById('arrL').className='arr'+(idx>0?'':' off');
+  document.getElementById('arrR').className='arr'+(idx<imgs.length-1?'':' off');
+
+  // Dots
+  const dotsEl=document.getElementById('idots');
+  dotsEl.innerHTML=imgs.length>1?imgs.map((_,i)=>`<span class="dot${i===idx?' on':''}"></span>`).join(''):'';
+
+  // Image
+  if(imgs[idx]){
+    const img=document.createElement('img');
+    img.src=imgs[idx];
+    img.onload=()=>{img.classList.add('vis');fb.style.opacity='0';};
+    img.onerror=()=>{img.remove();fb.style.opacity='1';};
+    wrap.insertBefore(img,wrap.querySelector('.cgrad'));
+  }
+}
+
+function prevImg(){if((imgCur[cur]||0)>0){imgCur[cur]--;refreshImg();}}
+function nextImg(){const l=(imgData[cur]||[]).length;if((imgCur[cur]||0)<l-1){imgCur[cur]++;refreshImg();}}
+
+function vote(v){
+  votes[cur]=v;
+  document.getElementById('vY').className='vb'+(v==='yes'?' yes':'');
+  document.getElementById('vM').className='vb'+(v==='maybe'?' mby':'');
+  document.getElementById('vN').className='vb'+(v==='no'?' no':'');
+  setTimeout(()=>{cur<EVT.length-1?(cur++,render()):showResult();},370);
+}
+function nextEv(){cur<EVT.length-1?(cur++,render()):showResult();}
+function prevEv(){cur>0&&(cur--,render());}
+
+// ═══════════════════════════════════════════════════
+//  DESCRIPTION MODAL
+// ═══════════════════════════════════════════════════
+function openDesc(){
+  const e=EVT[cur];
+  const t=document.getElementById('mtag');
+  t.textContent=e.t; t.style.color=e.tC; t.style.background=e.tB;
+  document.getElementById('mtitle').textContent=e.n;
+  document.getElementById('mcity').innerHTML='📍 '+e.c;
+  document.getElementById('mdtxt').textContent=DESCS[cur];
+  document.getElementById('mdesc').classList.remove('off');
+}
+function closeDesc(){document.getElementById('mdesc').classList.add('off');}
+function closeDescOutside(ev){if(ev.target===document.getElementById('mdesc'))closeDesc();}
+
+// ═══════════════════════════════════════════════════
+//  RESULT + SAVE
+// ═══════════════════════════════════════════════════
+async function showResult(){
+  show('sr');
+  const yes=Object.values(votes).filter(v=>v==='yes').length;
+  const maybe=Object.values(votes).filter(v=>v==='maybe').length;
+  const no=Object.values(votes).filter(v=>v==='no').length;
+  const T=EVT.length;
+
+  const [em,nm,ds]=yes>=15?['🦅','Explorador(a) da Paraíba Oculta','Você topa qualquer aventura! A Paraíba inteira é seu território.']
+    :yes>=10?['🎒','Aventureiro(a) Curioso(a)','Você está aberto(a) a descobrir o que a Paraíba tem de mais especial!']
+    :yes>=5?['🌵','Explorador(a) em Construção','Você já tem um gostinho pelo diferente — cada viagem aumenta o apetite!']
+    :['🏖️','Praieiro(a) Convicto(a)','A Paraíba vai muito além do litoral — que tal experimentar um dia?'];
+
+  document.getElementById('pem').textContent=em;
+  document.getElementById('pnm').textContent=nm;
+  document.getElementById('pds').textContent=ds;
+  document.getElementById('rbars').innerHTML=`
+    <div class="rbr"><span class="rbl">✅ Iria!</span><div class="rbt"><div class="rbf" style="width:${yes/T*100}%;background:linear-gradient(90deg,#154d22,#27ae60)"></div></div><span class="rbn">${yes}</span></div>
+    <div class="rbr"><span class="rbl">🤔 Talvez</span><div class="rbt"><div class="rbf" style="width:${maybe/T*100}%;background:linear-gradient(90deg,#4a3600,#f0a000)"></div></div><span class="rbn">${maybe}</span></div>
+    <div class="rbr"><span class="rbl">❌ Não iria</span><div class="rbt"><div class="rbf" style="width:${no/T*100}%;background:linear-gradient(90deg,#4a1616,#c0392b)"></div></div><span class="rbn">${no}</span></div>`;
+
+  document.getElementById('savmsg').textContent='Salvando resposta...';
+  try{
+    const res=await fetch(APPS_SCRIPT_URL,{
+      method:'POST',
+      body:JSON.stringify({action:'save',ts:new Date().toISOString(),name:profile.name,age:profile.age,state:profile.state,votes,yes,maybe,no,perfil:nm})
+    });
+    const result=await res.json();
+    document.getElementById('savmsg').textContent=result.ok?'✅ Resposta salva com sucesso!':'⚠️ Não foi possível salvar.';
+  }catch(e){document.getElementById('savmsg').textContent='⚠️ Erro ao salvar.';}
+}
+
+// ═══════════════════════════════════════════════════
+//  ADMIN
+// ═══════════════════════════════════════════════════
+function gotoAdmin(){
+  show('sa');
+  if(adminOk){
+    document.getElementById('apw').style.display='none';
+    document.getElementById('acnt').style.display='block';
+    loadAdmin();
+  }
+}
+
+function checkPw(){
+  if(document.getElementById('pwin').value==='siscultura'){
+    adminOk=true;
+    document.getElementById('apw').style.display='none';
+    document.getElementById('acnt').style.display='block';
+    loadAdmin();
+  } else {
+    document.getElementById('pwerr').textContent='Senha incorreta.';
+  }
+}
+
+async function loadAdmin(){
+  document.getElementById('atot').innerHTML='<div class="spin"></div>';
+  document.getElementById('astats').innerHTML='';
+  try{
+    const res=await fetch(APPS_SCRIPT_URL+'?action=list');
+    const result=await res.json();
+    adminResps=(result.data||[]).sort((a,b)=>new Date(a.ts)-new Date(b.ts));
+
+    document.getElementById('atot').innerHTML=
+      `<strong>${adminResps.length}</strong> resposta${adminResps.length!==1?'s':''} coletada${adminResps.length!==1?'s':''}`;
+
+    document.getElementById('astats').innerHTML=EVT.map((ev,i)=>{
+      const y=adminResps.filter(r=>r.votes?.[i]==='yes').length;
+      const m=adminResps.filter(r=>r.votes?.[i]==='maybe').length;
+      const n=adminResps.filter(r=>r.votes?.[i]==='no').length;
+      const tot=y+m+n||1;
+      return `<div class="sbox">
+        <div class="snm">${ev.n} <span class="sct">· ${ev.c}</span></div>
+        <div class="mbars">
+          <div class="mbar" style="flex:${y};background:#27ae60"></div>
+          <div class="mbar" style="flex:${m};background:#f0a000"></div>
+          <div class="mbar" style="flex:${n};background:#c0392b"></div>
+          ${y+m+n===0?'<div class="mbar" style="flex:1;background:#2a2218"></div>':''}
+        </div>
+        <div class="snums">
+          <span>✅ ${y} (${Math.round(y/tot*100)}%)</span>
+          <span>🤔 ${m} (${Math.round(m/tot*100)}%)</span>
+          <span>❌ ${n} (${Math.round(n/tot*100)}%)</span>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){document.getElementById('atot').textContent='Erro ao carregar.';}
+}
+
+// ═══════════════════════════════════════════════════
+//  XLSX EXPORT
+// ═══════════════════════════════════════════════════
+function downloadXLSX(){
+  if(!adminResps.length){alert('Nenhuma resposta para exportar ainda.');return;}
+  const lbl=v=>v==='yes'?'Iria!':v==='maybe'?'Talvez':v==='no'?'Não iria':'—';
+  const fdt=ts=>{const d=new Date(ts);return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;};
+  const headers=['Data/Hora','Nome','Idade','Estado',...EVT.map(e=>e.n)];
+  const rows=adminResps.map(r=>[fdt(r.ts),r.name||'—',r.age||'—',r.state||'—',...EVT.map((_,i)=>lbl(r.votes?.[i]))]);
+  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  ws['!cols']=[{wch:18},{wch:24},{wch:8},{wch:22},...EVT.map(()=>({wch:28}))];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,'Respostas',ws);
+  XLSX.writeFile(wb,'paraiba-escondida-respostas.xlsx');
+}
+
+function restart(){cur=0;votes={};imgCur={};show('sw');}
+if(location.hash==='#admin') gotoAdmin();
+</script>
+</body>
+</html>
