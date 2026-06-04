@@ -227,7 +227,7 @@ body{font-family:system-ui,sans-serif;background:#0f0c0a;color:#fff;min-height:1
 // ═══════════════════════════════════════════════════
 //  CONFIG — cole aqui a URL do seu Apps Script após o deploy
 // ═══════════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuUQVorXHhu4neHTGiOlCmRtFdS_fnYsSmd46VLEcYfkGt6MoxVFE0IL4lwY8d5TIv/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1kTLYolsw4_Gcf7HdPsTvYmSswdyr-bEXZOMBtKvVJJ6LOwDua1zXkhx-lCY3gtrf/exec';
 
 // ═══════════════════════════════════════════════════
 //  DATA
@@ -467,12 +467,12 @@ async function showResult(){
 
   document.getElementById('savmsg').textContent='Salvando resposta...';
   try{
-    const res=await fetch(APPS_SCRIPT_URL,{
+    await fetch(APPS_SCRIPT_URL,{
       method:'POST',
+      mode:'no-cors',
       body:JSON.stringify({action:'save',ts:new Date().toISOString(),name:profile.name,age:profile.age,state:profile.state,votes,yes,maybe,no,perfil:nm})
     });
-    const result=await res.json();
-    document.getElementById('savmsg').textContent=result.ok?'✅ Resposta salva com sucesso!':'⚠️ Não foi possível salvar.';
+    document.getElementById('savmsg').textContent='✅ Resposta salva com sucesso!';
   }catch(e){document.getElementById('savmsg').textContent='⚠️ Erro ao salvar.';}
 }
 
@@ -503,8 +503,15 @@ async function loadAdmin(){
   document.getElementById('atot').innerHTML='<div class="spin"></div>';
   document.getElementById('astats').innerHTML='';
   try{
-    const res=await fetch(APPS_SCRIPT_URL+'?action=list');
-    const result=await res.json();
+    const result=await new Promise((resolve,reject)=>{
+      const cb='_adminCb'+Date.now();
+      const t=setTimeout(()=>{delete window[cb];reject(new Error('timeout'));},10000);
+      window[cb]=d=>{clearTimeout(t);delete window[cb];resolve(d);};
+      const s=document.createElement('script');
+      s.onerror=()=>{clearTimeout(t);delete window[cb];reject(new Error('load error'));};
+      s.src=APPS_SCRIPT_URL+'?action=list&callback='+cb;
+      document.head.appendChild(s);
+    });
     adminResps=(result.data||[]).sort((a,b)=>new Date(a.ts)-new Date(b.ts));
 
     document.getElementById('atot').innerHTML=
