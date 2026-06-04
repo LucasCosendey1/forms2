@@ -467,10 +467,15 @@ async function showResult(){
 
   document.getElementById('savmsg').textContent='Salvando resposta...';
   try{
-    await fetch(APPS_SCRIPT_URL,{
-      method:'POST',
-      mode:'no-cors',
-      body:JSON.stringify({action:'save',ts:new Date().toISOString(),name:profile.name,age:profile.age,state:profile.state,votes,yes,maybe,no,perfil:nm})
+    await new Promise((resolve,reject)=>{
+      const cb='_saveCb'+Date.now();
+      const t=setTimeout(()=>{delete window[cb];reject(new Error('timeout'));},10000);
+      window[cb]=d=>{clearTimeout(t);delete window[cb];resolve(d);};
+      const s=document.createElement('script');
+      s.onerror=()=>{clearTimeout(t);delete window[cb];reject(new Error('load error'));};
+      const p=new URLSearchParams({action:'save',ts:new Date().toISOString(),name:profile.name,age:profile.age,state:profile.state,yes,maybe,no,perfil:nm,votes:JSON.stringify(votes),callback:cb});
+      s.src=APPS_SCRIPT_URL+'?'+p.toString();
+      document.head.appendChild(s);
     });
     document.getElementById('savmsg').textContent='✅ Resposta salva com sucesso!';
   }catch(e){document.getElementById('savmsg').textContent='⚠️ Erro ao salvar.';}
